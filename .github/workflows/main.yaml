@@ -41,20 +41,19 @@ jobs:
           pip install -r requirements.txt
           python manage.py test taskManager
 
-  sast:
-    runs-on: ubuntu-22.04
+  semgrep:
+    name: semgrep/ci
     needs: test
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
-
-      - run: docker run --rm -v $(pwd):/src hysnsec/bandit -r /src -f json -o /src/bandit-output.json
-        continue-on-error: true             # allow the build to fail, similar to allow_failure: true
-
+      - uses: actions/checkout@v4
+      - run: docker run --rm -v "${PWD}:/src" returntocorp/semgrep semgrep --config auto --output semgrep-output.json --json
       - uses: actions/upload-artifact@v4
         with:
-          name: Bandit
-          path: bandit-output.json
-        if: always()                        # what is this for?
+          name: semgrep
+          path: semgrep-output.json
+        continue-on-error: true             # allow the build to fail, similar to "allow_failure: true" in GitLab
+        if: always()  
 
   integration:
     runs-on: ubuntu-22.04
